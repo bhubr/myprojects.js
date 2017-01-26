@@ -33,10 +33,9 @@ function getCommitsForRepo(dir) {
 }
 
 function getCommitAuthors(commits) {
-  // console.log("getCommitAuthors", commits);
   return Promise.reduce(commits, function(authors, commit) {
     const author = commit.author();
-    const authorString = author.toString();
+    const authorString = author.name() + ' &lt;' + author.email() + '&gt;';
     // console.log( author.toString() );
     if( authors.indexOf( authorString ) !== -1 ) return authors;
     else return authors.concat(authorString);
@@ -105,11 +104,12 @@ app.get('/project/:id', function (req, res) {
   .set('authors')
   .get(({ commits, authors }) => {
     // console.log(commits, authors);
-    const messages = commits.map(commit => commit.message());
-    const msgConcat = messages.join('<br>');
-    const authConcat = authors.join('<br>');
-    console.log(messages.join("\n") + "\n#######\n" + authors.join("\n"));
-    res.send(msgConcat + '<hr>' + authConcat);
+    // const messages = commits.map(commit => commit.message());
+    // const msgConcat = messages.join('<br>');
+    // const authConcat = authors.join('<br>');
+    // console.log(messages.join("\n") + "\n#######\n" + authors.join("\n"));
+    // res.send(msgConcat + '<hr>' + authConcat);
+    res.json({ authors });
   });
   // Git.Repository.open(repo.dir)
   // .then(getMostRecentCommit)
