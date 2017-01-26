@@ -19,22 +19,36 @@ var getMostRecentCommit = function(repository) {
   return repository.getBranchCommit("master");
 };
 
-// var getParentCommits = function(commit) {
-//   return commit.getParents();
-// }
-
-var getParentCommits = function(commit) {
-  var promises = [];
-  return commit.getParents()
-  .then(commits => {
-    commits.forEach(_commit => {
-      promises.push(getParentCommits(_commit));
-    });
-    return Promise.all(promises)
-    .then(console.log);
-  });
+function getCommitsForRepo(dir) {
+  return Git.Repository.open(dir)
+  .then(getMostRecentCommit)
+  .then(commit => seqLoopDescending(commit, [commit]))
+  // .then(allCommits => {
+    // console.log("\n##### Commits for repo", dir);
+    // const messages = allCommits.map(commit => commit.message());
+    // console.log("  " + messages.join("  "));
+    // return allCommits;
+  // })
+  .catch(console.err);
 }
 
+function getCommitAuthors(commits) {
+  // console.log("getCommitAuthors", commits);
+  return Promise.reduce(commits, function(authors, commit) {
+    const author = commit.author();
+    const authorString = author.toString();
+    // console.log( author.toString() );
+    if( authors.indexOf( authorString ) !== -1 ) return authors;
+    else return authors.concat(authorString);
+      // return fs.readFileAsync(fileName, "utf8").then(function(contents) {
+      //     return total + parseInt(contents, 10);
+      // });
+  }, []).then(function(authors) {
+      //Total is 30
+      // console.log(authors);
+      return authors;
+  });
+}
 
 /** 
  * Fake random async work.  Returns (input + i + " ")
@@ -81,46 +95,31 @@ app.get('/', function (req, res) {
   res.send(Mustache.render(templates.index, { repositories }));
 });
 
-app.get('/:id', function (req, res) {
+app.get('/project/:id', function (req, res) {
   var id = req.params.id;
   var repo = repositories[id];
 
-  // chain(Git.Repository.open(repo.dir))
+  chain(getCommitsForRepo(repo.dir))
+  .set('commits')
+  .then(getCommitAuthors)
+  .set('authors')
+  .get(({ commits, authors }) => {
+    // console.log(commits, authors);
+    const messages = commits.map(commit => commit.message());
+    const msgConcat = messages.join('<br>');
+    const authConcat = authors.join('<br>');
+    console.log(messages.join("\n") + "\n#######\n" + authors.join("\n"));
+    res.send(msgConcat + '<hr>' + authConcat);
+  });
+  // Git.Repository.open(repo.dir)
   // .then(getMostRecentCommit)
-  // .set('mostRecent')
-  // // .then(getCommitMessage)
-  // .then(getParentCommits)
-  // .set('parents')
-  // .get(({ mostRecent, parents }) => {
-  //   output = mostRecent.message();
-  //   console.log( mostRecent.message() );
-  //   parents.forEach(commit => {
-  //     console.log( commit.message() );
-  //     output += '<br>' + commit.message();
-  //   })
-
-  //   res.send(output);
-  // });
-
-  Git.Repository.open(repo.dir)
-  .then(repository => {
-    return repository.getBranchCommit("master");
-  })
-  .then(commit => seqLoopDescending(commit, [commit]))
-  .then(allCommits => {
-      // console.log('all commits', allCommits);
-      const messages = allCommits.map(commit => commit.message());
-      // allCommits.forEach(commit => console.log(commit.message()));
-      res.send(messages.join('<br>'));
-  })
-  .catch(console.err);
-    // .then(function(message) {
-    //   console.log(message);
-    //   res.send(id + ' ' + repo.dir + ' ' + message);
-    // });
-  // res.send(id);
-  // res.send(Mustache.render(templates.index, { repositories }));
-  // res
+  // .catch(console.err)
+  // .then(commit => seqLoopDescending(commit, [commit]))
+  // .then(allCommits => {
+  //     const messages = allCommits.map(commit => commit.message());
+  //     res.send(messages.join('<br>'));
+  // })
+  // .catch(console.err);
 });
 
 
@@ -155,6 +154,18 @@ Promise.all(initPromises)
   console.log(templates);
   console.log("### repositories");
   console.log(repositories);
+  // var promises = [];
+  // repositories.forEach(repo => {
+  //   promises.push(
+  //     getCommitsForRepo(repo.dir)
+  //     .then(getCommitAuthors)
+  //   );
+  // })
+  // return Promise.all(promises)
+  // .catch(console.err);
+})
+.then(allCommitsPerRepo => {
+  // console.log(allCommitsPerRepo);
   app.listen(3000, function () {
     console.log('Example app listening on port 3000!');
   });
