@@ -1,7 +1,19 @@
 {
   "name": "express-myprojects",
   "description": "track my projects",
+  "license": "WTFPL",
+  "repository": "http://github.com/bhubr/myprojects.git",
   "dependencies": {
-    "express": "^4.14.0"
+    "bluebird": "^3.4.7",
+    "express": "^4.14.0",
+    "mustache": "^2.3.0",
+    "nodegit": "^0.16.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.22.2",
+    "babel-preset-es2015": "^6.22.0"
+  },
+  "scripts": {
+    "build": "babel server.js -o compiled.js"
   }
 }
