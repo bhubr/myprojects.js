@@ -19,9 +19,53 @@ var getMostRecentCommit = function(repository) {
   return repository.getBranchCommit("master");
 };
 
+// var getParentCommits = function(commit) {
+//   return commit.getParents();
+// }
+
 var getParentCommits = function(commit) {
-  return commit.getParents();
+  var promises = [];
+  return commit.getParents()
+  .then(commits => {
+    commits.forEach(_commit => {
+      promises.push(getParentCommits(_commit));
+    });
+    return Promise.all(promises)
+    .then(console.log);
+  });
 }
+
+
+/** 
+ * Fake random async work.  Returns (input + i + " ")
+ **/
+function doTheWork(commit) {
+    // console.log(commit.message());
+    return commit.getParents()
+    .then(commits => {
+        return commits[0];
+    });
+}
+
+/**
+ * Loops sequentially over an async function named doTheWork.  This is useful
+ * when each iteration depends on some result from the previous one.  It is the slowest async loop,
+ * so only use it when absolutely necessary.
+ * 
+ * This is the simplest variant, but it outputs the indexes in descending order.  Use it if your work 
+ * function does not care about the index, or only needs to know when its on the last item.
+ **/
+function seqLoopDescending(someCommit, allCommits) {
+    // console.log(allCommits);
+    return new Promise(function (resolve, reject) {
+        doTheWork(someCommit).then(function (parentCommit) {
+            // console.log('parent', parentCommit);
+            if(parentCommit === undefined) resolve(allCommits);
+            else resolve(seqLoopDescending(parentCommit, allCommits.concat([parentCommit])));
+        })
+    });
+}
+
 
 var getCommitMessage = function(commit) {
   return commit.message();
@@ -41,25 +85,42 @@ app.get('/:id', function (req, res) {
   var id = req.params.id;
   var repo = repositories[id];
 
-  chain(Git.Repository.open(repo.dir))
-  .then(getMostRecentCommit)
-  .set('mostRecent')
-  // .then(getCommitMessage)
-  .then(getParentCommits)
-  .set('parents')
-  .get(({ mostRecent, parents }) => {
-    console.log( mostRecent.message() );
-    parents.forEach(commit => {
-      console.log( commit.message() );
-    })
-  });
+  // chain(Git.Repository.open(repo.dir))
+  // .then(getMostRecentCommit)
+  // .set('mostRecent')
+  // // .then(getCommitMessage)
+  // .then(getParentCommits)
+  // .set('parents')
+  // .get(({ mostRecent, parents }) => {
+  //   output = mostRecent.message();
+  //   console.log( mostRecent.message() );
+  //   parents.forEach(commit => {
+  //     console.log( commit.message() );
+  //     output += '<br>' + commit.message();
+  //   })
+
+  //   res.send(output);
+  // });
+
+  Git.Repository.open(repo.dir)
+  .then(repository => {
+    return repository.getBranchCommit("master");
+  })
+  .then(commit => seqLoopDescending(commit, [commit]))
+  .then(allCommits => {
+      // console.log('all commits', allCommits);
+      const messages = allCommits.map(commit => commit.message());
+      // allCommits.forEach(commit => console.log(commit.message()));
+      res.send(messages.join('<br>'));
+  })
+  .catch(console.err);
     // .then(function(message) {
     //   console.log(message);
     //   res.send(id + ' ' + repo.dir + ' ' + message);
     // });
   // res.send(id);
   // res.send(Mustache.render(templates.index, { repositories }));
-  res
+  // res
 });
 
 
