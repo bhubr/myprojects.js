@@ -4,6 +4,7 @@ var path = require('path');
 var fs = Promise.promisifyAll(require("fs"));
 var Git = require("nodegit");
 var Mustache = require('mustache');
+var chain = require("store-chain");
 
 var projects = require('./routes/projects');
 var app = express();
@@ -17,6 +18,10 @@ var repos = require('./repositories.json'); //[];
 var getMostRecentCommit = function(repository) {
   return repository.getBranchCommit("master");
 };
+
+var getParentCommits = function(commit) {
+  return commit.getParents();
+}
 
 var getCommitMessage = function(commit) {
   return commit.message();
@@ -36,13 +41,22 @@ app.get('/:id', function (req, res) {
   var id = req.params.id;
   var repo = repositories[id];
 
-  Git.Repository.open(repo.dir)
-    .then(getMostRecentCommit)
-    .then(getCommitMessage)
-    .then(function(message) {
-      console.log(message);
-      res.send(id + ' ' + repo.dir + ' ' + message);
-    });
+  chain(Git.Repository.open(repo.dir))
+  .then(getMostRecentCommit)
+  .set('mostRecent')
+  // .then(getCommitMessage)
+  .then(getParentCommits)
+  .set('parents')
+  .get(({ mostRecent, parents }) => {
+    console.log( mostRecent.message() );
+    parents.forEach(commit => {
+      console.log( commit.message() );
+    })
+  });
+    // .then(function(message) {
+    //   console.log(message);
+    //   res.send(id + ' ' + repo.dir + ' ' + message);
+    // });
   // res.send(id);
   // res.send(Mustache.render(templates.index, { repositories }));
   res
