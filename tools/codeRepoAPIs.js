@@ -29,7 +29,7 @@ Bitbucket.prototype._fire = function() {
   // console.log('\n\n## Bitbucket _fire: ', this.id, this.options.uri);
   return rp(this.options)
   .then(res => {
-    console.log('### RET FROM _fire: (next => %s) [%s] %s', res.next, this.username, mapRepos(res.values));
+    // console.log('\n### RET FROM _fire: (next => %s) [%s] %s', res.next, this.username, mapRepos(res.values));
     return res;
   });
 };
@@ -40,24 +40,25 @@ Bitbucket.prototype.fire = function() {
   // .then(res => {
   //   console.log(this); return res;
   // })
-  .then(res => this.seqLoopDescending.call(this, res, []))
-  .then(console.log);
+  .then(res => this.seqLoopDescending.call(this, res, res.values));
+  // .then(mapRepos)
+  // .then(console.log);
 };
 
 Bitbucket.prototype.getNextPage = function(nextPageLink) {
-  console.log('## getNextPage', this.id, nextPageLink);
+  // console.log('## getNextPage', this.id, nextPageLink);
   this.options.uri = nextPageLink;
   return this._fire.call(this);
 }
 Bitbucket.prototype.seqLoopDescending = function (res, allRepos) {
   var that = this;
-  console.log('Bitbucket seqLoopDescending', this.id);
+  // console.log('Bitbucket seqLoopDescending', this.id, '[', mapRepos(allRepos), ']');
   return new Promise(function (resolve, reject) {
-    if(res.next === undefined) resolve(allRepos);
+    if(res.next === undefined) resolve(allRepos.concat(res.values));
     else that.getNextPage(res.next).then(({ next, values }) => {
-      // console.log(that.options.uri, values);
+      // console.log('after next page', that.options.uri,mapRepos (values));
       // if(_nextPageLink === undefined) resolve(allRepos);
-      if(next === undefined) resolve(allRepos);
+      if(next === undefined) resolve(allRepos.concat(values));
       else resolve(that.seqLoopDescending.call(that, { next, values }, allRepos.concat(values)));
     })
     .catch(err => {
@@ -68,11 +69,21 @@ Bitbucket.prototype.seqLoopDescending = function (res, allRepos) {
 }
 
 function Github(cred) {
+  this.username = cred.username;
+  this.options = {
+    uri: 'https://api.github.com/user/repos',
+    headers: {
+      'Authorization': getAuthHeader(cred),
+      'User-Agent': 'MyProjects-js-App'
+    },
+    json: true // Automatically parses the JSON string in the response
+  };
 
 }
 
 Github.prototype.fire = function() {
-  console.log('GitHub fire');
+  return rp(this.options);
+  // console.log('GitHub fire');
   // return this._fire()
   // .then(res => this.seqLoopDescending(res, []));
 };
@@ -201,5 +212,9 @@ var strategies = {
 
 creds.forEach( cred => {
   var strategy = new strategies[cred.type](cred);
-  strategy.fire();
+  strategy.fire()
+  .then(repos => {
+    console.log("\n### Repos for user %s@%s\n", cred.username, cred.type);
+    console.log(mapRepos(repos));
+  });
 } );
