@@ -31,7 +31,7 @@
       <!--   Icon Section   -->
       <div class="row">
 
-        <div class="col s12 m12">
+        <div class="col s12 m8">
           <h3>Local repositories</h3>
             <ul id="repo-list" class="collapsible" data-collapsible="expandable">
             {{#localRepositories}}
@@ -41,6 +41,9 @@
               </li>
             {{/localRepositories}}
             </ul>
+        </div>
+
+        <div class="col s12 m4">
 
           <h3>Remote repositories</h3>
           {{#remoteRepositories}}
@@ -125,6 +128,9 @@
         _listItem.find('.collapsible-header').addClass('active').removeClass('red');
         if(isBen) {
           _listItem.find('.collapsible-header').addClass('green');  //css('background', '#9fb');
+        }
+        else if( ! _listItem.find('.collapsible-header').hasClass('red') ) {
+          _listItem.hide();
         }
       }, 'json');
 
