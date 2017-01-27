@@ -11,7 +11,7 @@ var Git = require("nodegit");
 var Mustache = require('mustache');
 var chain = require("store-chain");
 var chokidar = require('chokidar');
-
+var getRepositories = require('./tools/codeRepoAPIs');
 
 /*------------------------*
  | Global vars
@@ -22,8 +22,10 @@ var app = express();
 var projects = require('./routes/projects');
 var repos = require('./repositories.json');
 var config = require('./config.json');
+var creds = require('./tools/cred.json');
 var templates = {};
-var repositories = [];
+var localRepositories = [];
+var remoteRepositories = [];
 
 
 /*------------------------*
@@ -104,12 +106,12 @@ function seqLoopDescending(someCommit, allCommits) {
 app.use(express.static('static'));
 
 app.get('/', function (req, res) {
-  res.send(Mustache.render(templates.index, { repositories }));
+  res.send(Mustache.render(templates.index, { localRepositories, remoteRepositories }));
 });
 
 app.get('/project/:id', function (req, res) {
   var id = req.params.id;
-  var repo = repositories[id];
+  var repo = localRepositories[id];
 
   chain(getCommitsForRepo(repo.dir))
   .set('commits')
@@ -133,7 +135,7 @@ app.use('/projects', projects);
  */
 
 repos.forEach((dir, index) => {
-  repositories.push({ dir, index });
+  localRepositories.push({ dir, index });
 })
 
 /**
@@ -152,6 +154,10 @@ chokidar.watch('./templates', {ignored: /[\/\\]\./}).on('all', (event, _path) =>
 /**
  * Start the app
  */
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!');
+getRepositories(creds)
+.then(_remoteRepositories => {
+  remoteRepositories = _remoteRepositories;
+  app.listen(3000, function () {
+    console.log('Example app listening on port 3000!');
+  });
 });
