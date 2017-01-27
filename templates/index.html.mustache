@@ -35,7 +35,7 @@
             <ul id="repo-list" class="collapsible" data-collapsible="expandable">
             {{#repositories}}
               <li>
-              <div class="collapsible-header"><i class="material-icons">filter_drama</i><span data-href="/project/{{index}}">{{dir}}</span></div>
+              <div class="collapsible-header lighten-3"><i class="material-icons">filter_drama</i><span data-href="/project/{{index}}">{{dir}}</span></div>
               <div class="collapsible-body"><p>Lorem ipsum dolor sit amet.</p></div>
               </li>
             {{/repositories}}
@@ -97,21 +97,22 @@
   <script>
   function populatePanelBody(listItem) {
     (function(_listItem) {
+      _listItem.find('.collapsible-header').addClass('red');
       const href = _listItem.find('span').data('href');
       // console.log(href);
       $.get(href, data => {
         let isBen = false;
         data.authors.forEach(author => {
           if(author.includes('benoithubert') || author.includes('littlebuddha')) {
-            // console.log("Author ", author, " is Ben !!");
-            // _listItem.css('background', '#9fb');
             isBen = true;
           }
         });
         console.log(_listItem.find('.collapsible-body'));
         _listItem.find('.collapsible-body').html('<ul><li>' + data.authors.join('</li><li>') + '</li></ul>');
-        _listItem.find('.collapsible-header').addClass('active');
-        if(isBen) _listItem.find('.collapsible-header').css('background', '#9fb');
+        _listItem.find('.collapsible-header').addClass('active').removeClass('red');
+        if(isBen) {
+          _listItem.find('.collapsible-header').addClass('green');  //css('background', '#9fb');
+        }
       }, 'json');
 
     })(listItem);
