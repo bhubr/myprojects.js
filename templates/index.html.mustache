@@ -124,10 +124,11 @@
             isBen = true;
           }
         });
-        _listItem.find('.collapsible-body').html('<ul><li>' + data.authors.join('</li><li>') + '</li></ul>');
         _listItem.find('.collapsible-header').addClass('active').removeClass('red');
         if(isBen) {
-          _listItem.find('.collapsible-header').addClass('green');  //css('background', '#9fb');
+          _listItem.find('.collapsible-header').addClass('green');
+          _listItem.find('.collapsible-body').html('<ul><li>' + data.authors.join('</li><li>') + '</li></ul>');
+          _listItem.find('.collapsible-body').append('<ul><li>' + data.commitMessages.join('</li><li>') + '</li></ul>');
         }
         else if( ! _listItem.find('.collapsible-header').hasClass('red') ) {
           _listItem.hide();

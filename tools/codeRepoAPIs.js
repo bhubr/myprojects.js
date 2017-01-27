@@ -10,16 +10,16 @@ var strategies = {
   bitbucket: Bitbucket
 }
 
-function getRepositories(cred) {
+function getRepositoriesForAccount(cred) {
   var strategy = new strategies[cred.type](cred);
   return strategy.fire();
 }
 
-module.exports = function(creds) {
+function getRepositories(creds) {
   if( creds === undefined ) throw new Error("You must supply credentials to getRepositories()");
   var promises = [];
   creds.forEach(cred => {
-    promises.push(getRepositories(cred));
+    promises.push(getRepositoriesForAccount(cred));
   })
   return Promise.all(promises)
   .then(results => {
@@ -34,11 +34,10 @@ module.exports = function(creds) {
   });
 };
 
-// creds.forEach( cred => {
-//   var strategy = new strategies[cred.type](cred);
-//   strategy.fire()
-//   .then(repos => {
-//     console.log("\n### Repos for user %s@%s\n", cred.username, cred.type);
-//     console.log(mapRepos(repos));
-//   });
-// } );
+function getCommitsForRepo(creds, repoSlug) {
+
+}
+
+module.exports = {
+  getRepositories, getCommitsForRepo
+};

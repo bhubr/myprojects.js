@@ -5,13 +5,14 @@
  */
 var express = require('express');
 var Promise = require('bluebird');
+var _ = require('lodash');
 var path = require('path');
 var fs = Promise.promisifyAll(require("fs"));
 var Git = require("nodegit");
 var Mustache = require('mustache');
 var chain = require("store-chain");
 var chokidar = require('chokidar');
-var getRepositories = require('./tools/codeRepoAPIs');
+var apiTools = require('./tools/codeRepoAPIs');
 
 /*------------------------*
  | Global vars
@@ -118,7 +119,8 @@ app.get('/project/:id', function (req, res) {
   .then(getCommitAuthors)
   .set('authors')
   .get(({ commits, authors }) => {
-    res.json({ authors });
+    var commitMessages = _.map(commits, commit => { return commit.id() + ' ' + commit.message(); });
+    res.json({ authors, commitMessages });
   })
   .catch(err => {
     res.status(500).json({ authors: [], error: err.message })
@@ -154,7 +156,7 @@ chokidar.watch('./templates', {ignored: /[\/\\]\./}).on('all', (event, _path) =>
 /**
  * Start the app
  */
-getRepositories(creds)
+apiTools.getRepositories(creds)
 .then(_remoteRepositories => {
   remoteRepositories = _remoteRepositories;
   app.listen(3000, function () {

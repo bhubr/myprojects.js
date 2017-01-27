@@ -1,2 +1,2 @@
-# express-myprojects
+# myprojects.js
 
