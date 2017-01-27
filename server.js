@@ -173,7 +173,7 @@ apiTools.getRepositories(creds)
     _remoteRepositories.forEach((repositorySet, repoSetIndex) => {
       repositorySet.repositories.forEach((repo, repoIndex) => {
         remoteRepositories[repoSetIndex].repositories[repoIndex].commits = commitSets[index];
-        console.log("Commits for ", remoteRepositories[repoSetIndex].repositories[repoIndex].name, commitSets[index]);
+        // console.log("Commits for ", remoteRepositories[repoSetIndex].repositories[repoIndex].name, commitSets[index]);
         index++;
       });
     });

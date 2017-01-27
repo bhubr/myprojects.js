@@ -10,9 +10,10 @@ var creds = require('./cred.json');
 function Bitbucket(cred) {
   this.username = cred.username;
   this.id = 'bitbucket-' + (1000000 * Math.random()).toString(36);
-  this.uri = 'https://api.bitbucket.org/2.0/repositories/' + cred.username;
+  this.baseUri = 'https://api.bitbucket.org/2.0';
+  // this.uri = 'https://api.bitbucket.org/2.0/repositories/' + cred.username;
   this.options = {
-      uri: this.uri,
+      // uri: this.uri,
       headers: {
         'Authorization': common.getAuthHeader(cred),
         'User-Agent': 'MyProjects-js-App'
@@ -21,18 +22,37 @@ function Bitbucket(cred) {
   };
 }
 
-Bitbucket.prototype._fire = function() {
-  return rp(this.options);
+Bitbucket.prototype.setPath = function(relativePath) {
+  this.options.uri = this.baseUri + relativePath;
 };
 
 Bitbucket.prototype.fire = function() {
-  return this._fire.call(this)
+  return rp(this.options);
+};
+
+Bitbucket.prototype.getRepositories = function() {
+  this.setPath('/repositories/' + this.username);
+  return this.fire.call(this)
   .then(res => this.seqLoopDescending.call(this, res, res.values));
 };
 
+
+Bitbucket.prototype.getCommitsFor = function(repoName) {
+  this.setPath('/repositories/' + this.username + '/' + repoName + '/commits');
+  return this.fire()
+  .then(commits => { 
+    // console.log(commits);
+    return _.map(commits.values, commit => {
+    // console.log(commit);
+    // return commit;
+    return { sha: commit.hash, message: commit.message };
+  }); });
+};
+
+
 Bitbucket.prototype.getNextPage = function(nextPageLink) {
   this.options.uri = nextPageLink;
-  return this._fire.call(this);
+  return this.fire.call(this);
 }
 Bitbucket.prototype.seqLoopDescending = function (res, allRepos) {
   var that = this;

@@ -12,7 +12,7 @@ var strategies = {
 
 function getRepositoriesForAccount(cred) {
   var strategy = new strategies[cred.type](cred);
-  return strategy.fire();
+  return strategy.getRepositories();
 }
 
 function getRepositories(creds) {
@@ -35,12 +35,17 @@ function getRepositories(creds) {
   });
 };
 
-function getCommitsForRepo(creds, repoSlug) {
-  return Promise.resolve([
-    { message: "This is 3rd commit for " + repoSlug },
-    { message: "This is 2nd commit for " + repoSlug },
-    { message: "This is 1st commit for " + repoSlug }
-  ]);
+function getCommitsForRepo(cred, repoSlug) {
+  // console.log(cred, repoSlug);
+  var strategy = new strategies[cred.type](cred);
+  // if (cred.type === 'github') {
+    return strategy.getCommitsFor(repoSlug);
+  // }
+  // else return Promise.resolve([
+  //   { message: "This is 3rd commit for " + repoSlug },
+  //   { message: "This is 2nd commit for " + repoSlug },
+  //   { message: "This is 1st commit for " + repoSlug }
+  // ]);
 
 }
 
