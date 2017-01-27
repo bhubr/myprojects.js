@@ -47,12 +47,18 @@
 
           <h3>Remote repositories</h3>
           {{#remoteRepositories}}
-            <h4>{{account}}</h4>
+            <h4>{{account.username}}@{{account.type}}</h4>
             <ul class="collapsible" data-collapsible="expandable">
             {{#repositories}}
               <li>
               <div class="collapsible-header lighten-4"><i class="material-icons">filter_drama</i><span>{{name}}</span></div>
-              <div class="collapsible-body"><p>Lorem ipsum dolor sit amet.</p></div>
+              <div class="collapsible-body">
+              <ul>
+              {{#commits}}
+                <li>{{message}}</li>
+              {{/commits}}
+              </ul>
+              </div>
               </li>
             {{/repositories}}
             </ul>

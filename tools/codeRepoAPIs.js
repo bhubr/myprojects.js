@@ -25,8 +25,9 @@ function getRepositories(creds) {
   .then(results => {
     var orderedResults = [];
     creds.forEach((cred, index) => {
+      var { username, type } = cred;
       orderedResults.push({
-        account: cred.username + '@' + cred.type,
+        account: cred,
         repositories: results[index]
       });
     });
@@ -35,6 +36,11 @@ function getRepositories(creds) {
 };
 
 function getCommitsForRepo(creds, repoSlug) {
+  return Promise.resolve([
+    { message: "This is 3rd commit for " + repoSlug },
+    { message: "This is 2nd commit for " + repoSlug },
+    { message: "This is 1st commit for " + repoSlug }
+  ]);
 
 }
 

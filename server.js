@@ -159,7 +159,34 @@ chokidar.watch('./templates', {ignored: /[\/\\]\./}).on('all', (event, _path) =>
 apiTools.getRepositories(creds)
 .then(_remoteRepositories => {
   remoteRepositories = _remoteRepositories;
-  app.listen(3000, function () {
-    console.log('Example app listening on port 3000!');
+  var commitsPromises = [];
+  _remoteRepositories.forEach(repositorySet => {
+    repositorySet.repositories.forEach(repo => {
+      commitsPromises.push(apiTools.getCommitsForRepo(repositorySet.account, repo.name));
+    });
+    
+  });
+  Promise.all(commitsPromises)
+  .then(commitSets => {
+    var index = 0;
+
+    _remoteRepositories.forEach((repositorySet, repoSetIndex) => {
+      repositorySet.repositories.forEach((repo, repoIndex) => {
+        remoteRepositories[repoSetIndex].repositories[repoIndex].commits = commitSets[index];
+        console.log("Commits for ", remoteRepositories[repoSetIndex].repositories[repoIndex].name, commitSets[index]);
+        index++;
+      });
+    });
+
+
+    // commitSets.forEach((commits, index) => {
+    //   remoteRepositories[index].commits = commits;
+    //   console.log("\n\nRepository...\n", remoteRepositories[index] );
+    // });
+
+    app.listen(3000, function () {
+      console.log('Example app listening on port 3000!');
+    });
+
   });
 });
