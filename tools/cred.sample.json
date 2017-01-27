@@ -1,0 +1,12 @@
+[
+  {
+    "type": "bitbucket",
+    "username": "mybbuser",
+    "password": "mybbpass"
+  },
+  {
+    "type": "github",
+    "username": "myghuser",
+    "password": "myghpass"
+  }
+]
