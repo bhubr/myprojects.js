@@ -1,17 +1,16 @@
 const Promise = require('bluebird');
-const getgit = require('./node_modules/getgit/build/Release/addon');
+const gitscan = require('scan-git-folders');
 const config = require('./config.json');
 var fs = Promise.promisifyAll(require("fs"));
 
 const getgitAsync = function(dir) {
   return new Promise((resolve, reject) => {
-    getgit.array(dir, resolve);
+    gitscan.gitscan(dir, resolve);
   });
 }
 
 
 function getRepos(directories) {
-  // return new Promise((resolve, reject) => {
     var promises = [];
     var repositories = [];
     directories.forEach(dirname => {
@@ -25,8 +24,6 @@ function getRepos(directories) {
     });
     return Promise.all(promises)
     .then(() => { return repositories; });
-
-  // });
 }
 
 getRepos(config.directories)
