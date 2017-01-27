@@ -37,6 +37,9 @@ var repositories = [];
  */
 var getMostRecentCommit = function(repository) {
   return repository.getBranchCommit("master");
+  // .catch(err => {
+  //   console.error("#### STH WRONG", err);
+  // });
 };
 
 /**
@@ -45,8 +48,8 @@ var getMostRecentCommit = function(repository) {
 function getCommitsForRepo(dir) {
   return Git.Repository.open(dir)
   .then(getMostRecentCommit)
-  .then(commit => seqLoopDescending(commit, [commit]))
-  .catch(console.err);
+  .then(commit => seqLoopDescending(commit, [commit]));
+  // .catch(console.error);
 }
 
 /**
@@ -82,6 +85,10 @@ function seqLoopDescending(someCommit, allCommits) {
             if(parentCommit === undefined) resolve(allCommits);
             else resolve(seqLoopDescending(parentCommit, allCommits.concat([parentCommit])));
         })
+        .catch(err => {
+          // console.error("#### STH WRONG", err);
+          reject(err);
+        })
     });
 }
 
@@ -110,7 +117,10 @@ app.get('/project/:id', function (req, res) {
   .set('authors')
   .get(({ commits, authors }) => {
     res.json({ authors });
-  });
+  })
+  .catch(err => {
+    res.status(500).json({ authors: [], error: err.message })
+  })
 });
 
 // TODO: ACTUALLY USE IT
